@@ -8,7 +8,7 @@ import ChatScroll, {api, Constant} from '../src';
 
 
 ReactDOM.render(<ChatScroll/>, document.querySelector('#root'));
-for(let i = 1; i < 100; i = i + 2) {
+for(let i = 1; i < 200; i = i + 2) {
     api.message.add({
         id: i,
         data: `${i}: 你好`,
@@ -24,9 +24,7 @@ for(let i = 1; i < 100; i = i + 2) {
         avatar: '//img13.360buyimg.com/ee/jfs/t3100/53/3349569343/26913/4e9280da/57f2291dN68afd214.png'
     });
 }
-setTimeout(() => {
-    api.scrollToBottom();
-}, 5000);
+
 // let i = 1;
 // setInterval(() => {
 //     api.message.add({

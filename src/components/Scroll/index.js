@@ -27,7 +27,7 @@ const Content = styled.div.attrs({
 `;
 const PullDown = styled.div.attrs({
     style: (props) => ({
-        top: `${props.translateY - 80}px`
+        top: `${props.translateY< 0 ? -80 : props.translateY - 80}px`
     })
 })`
     height: 80px;
@@ -112,19 +112,30 @@ class Scroll extends Component {
         }
         this.moving = false;
         if(this.state.translateY > 50) {
+            this.setState({
+                duration: 500,
+                translateY: 50
+            }, () => {
+                this.pullDownDraw();
+            });
             setTimeout(() => {
                 this.scrollToTop();
             }, 2000);
             return;
         }
         if(this.state.translateY > 0 && this.state.translateY < 50) {
-            this.scrollToTop();
+            this.setState({
+                duration: 500
+            }, () => {
+                this.scrollToTop();
+            });
+
             return;
         }
 
         if(this.contentHeight - this.wrapperHeight + this.state.translateY < 0) {
             this.setState({
-                duration: 1000
+                duration: 500
             }, () => {
                 this.scrollToBottom();
             });
@@ -139,9 +150,8 @@ class Scroll extends Component {
             this.scrollDistance[1] = 0;
         }
         const offset = this.scrollDistance[0] - this.scrollDistance[1];
-        console.log(this.scrollDistance);
         const bottomY = this.wrapperHeight - this.contentHeight;
-        let   targetY = this.state.translateY - offset * 40;
+        let   targetY = this.state.translateY - offset * 20;
         targetY = targetY > bottomY ? targetY : bottomY;
         targetY = targetY > 0 ? 0 : targetY;
         this.setState({
@@ -204,11 +214,11 @@ class Scroll extends Component {
         this.canvasContext.fill();
         this.canvasContext.stroke();
         if(y <= 90) {
-            this.canvasContext.lineWidth = 4;
-            this.canvasContext.strokeStyle = '#fff';
-            this.canvasContext.moveTo(95, 130 - yOffset);
-            this.canvasContext.arc(80, 130 - yOffset, 15, 0, 1.8 * Math.PI);
-            this.canvasContext.stroke();
+            // this.canvasContext.lineWidth = 4;
+            // this.canvasContext.strokeStyle = '#fff';
+            // this.canvasContext.moveTo(95, 130 - yOffset);
+            // this.canvasContext.arc(80, 130 - yOffset, 15, 0, 1.8 * Math.PI);
+            // this.canvasContext.stroke();
         }
 
     }
