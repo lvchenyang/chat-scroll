@@ -72,6 +72,9 @@ class Scroll extends Component {
         this.scrollDistance = [0, 0];
     }
     touchStart(e) {
+        if(e.cancelable && !e.defaultPrevented) {
+            e.preventDefault();
+        }
         const touch = e.targetTouches[0];
         this.touchStartY = touch.screenY;
         this.translateY = this.state.translateY;
@@ -80,6 +83,9 @@ class Scroll extends Component {
         });
     }
     touchMove(e) {
+        if(e.cancelable && !e.defaultPrevented) {
+            e.preventDefault();
+        }
         this.moving = true;
         if(this.scrollDistance[1] !== 0) {
             this.scrollDistance[0] = this.state.translateY;
@@ -101,8 +107,10 @@ class Scroll extends Component {
         });
     }
     touchEnd(e) {
+        if(e.cancelable && !e.defaultPrevented) {
+            e.preventDefault();
+        }
         this.moving = false;
-
         if(this.state.translateY > 50) {
             setTimeout(() => {
                 this.scrollToTop();
@@ -127,9 +135,13 @@ class Scroll extends Component {
         if(this.scrollDistance[1] === 0) {
             this.scrollDistance[1] = this.state.translateY;
         }
+        if(this.scrollDistance[0] === 0) {
+            this.scrollDistance[1] = 0;
+        }
         const offset = this.scrollDistance[0] - this.scrollDistance[1];
+        console.log(this.scrollDistance);
         const bottomY = this.wrapperHeight - this.contentHeight;
-        let   targetY = this.state.translateY - offset * 20;
+        let   targetY = this.state.translateY - offset * 40;
         targetY = targetY > bottomY ? targetY : bottomY;
         targetY = targetY > 0 ? 0 : targetY;
         this.setState({

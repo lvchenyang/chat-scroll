@@ -39,8 +39,10 @@ module.exports = {
         port: 9001,
         host: '127.0.0.1',
         hot : true,
+        inline: true,
         watchOptions: {
-            poll: true
+            poll: 1000,
+            aggregateTimeout: 300
         }
     }
 };
