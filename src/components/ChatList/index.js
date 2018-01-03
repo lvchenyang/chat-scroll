@@ -5,8 +5,12 @@ import React, {PureComponent} from 'react';
 import {connect} from 'react-redux';
 import {messageAdd} from '../../store/actions';
 import Message from '../Message';
-import Scroll from '../Scroll';
-
+import Scroll, {scrollApi} from '../Scroll';
+const api = {
+    message: {},
+    scrollToBottom: () => {},
+    scrollToTop   : () => {}
+};
 class ChatList extends PureComponent {
     constructor() {
         super();
@@ -20,13 +24,14 @@ class ChatList extends PureComponent {
             </Scroll>
         );
     }
-    componentDidUpdate() {
-
+    componentDidMount() {
+        api.scrollToBottom = scrollApi.scrollToBottom;
+        api.scrollToTop    = scrollApi.scrollToTop;
+        api.isBottom       = scrollApi.isBottom;
+        api.isTop          = scrollApi.isTop;
     }
 }
-const api = {
-    message: {}
-};
+
 
 const mapReducerToProps = (dispatch, props) => {
     api.message.add = (message) => messageAdd(dispatch, message);
