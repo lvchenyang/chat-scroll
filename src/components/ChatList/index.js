@@ -16,10 +16,10 @@ class ChatList extends PureComponent {
         super();
     }
     render() {
-        const {oldMessages, newMessages} = this.props;
+        const {oldMessages, newMessages, onRefresh} = this.props;
         const list = oldMessages.reverse().concat(newMessages).toList();
         return (
-            <Scroll>
+            <Scroll onRefresh={onRefresh || (() => {})}>
                 {list.map(item =><Message key={item.id} message={item}/>)}
             </Scroll>
         );
@@ -29,6 +29,7 @@ class ChatList extends PureComponent {
         api.scrollToTop    = scrollApi.scrollToTop;
         api.isBottom       = scrollApi.isBottom;
         api.isTop          = scrollApi.isTop;
+        api.hideLoading    = scrollApi.hideLoading;
     }
 }
 

@@ -6,9 +6,15 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import ChatScroll, {api, Constant} from '../src';
 
+const refresh = () => {
+    console.log('触发下拉更新');
+    setTimeout(() => {
+        api.hideLoading();
+    }, 2000);
+};
 
-ReactDOM.render(<ChatScroll/>, document.querySelector('#root'));
-for(let i = 1; i < 200; i = i + 2) {
+ReactDOM.render(<ChatScroll onRefresh={refresh}/>, document.querySelector('#root'));
+for(let i = 1; i < 20; i = i + 2) {
     api.message.add({
         id: i,
         data: `${i}: 你好`,

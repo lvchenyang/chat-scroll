@@ -16,21 +16,21 @@ const Wrapper = styled.div`
 `;
 const Content = styled.div.attrs({
     style: (props) => ({
-        transform: `translate(0px, ${props.translateY}px) translateZ(0px)`,
+        transform: `translate3d(0, ${props.translateY}px, 0)`,
         transitionDuration: `${props.duration}ms`
     })
 })`
     display: flex;
     flex-direction: column;
     transition-property: transform;
-    transition-timing-function: cubic-bezier(0.165, 0.84, 0.44, 1);
+    transition-timing-function: cubic-bezier(.24,.68,.32,.88);
 `;
 const PullDown = styled.div.attrs({
     style: (props) => ({
-        top: `${props.translateY< 0 ? -80 : props.translateY - 80}px`
+        top: `${props.translateY< 0 ? -100 : props.translateY - 100}px`
     })
 })`
-    height: 80px;
+    height: 100px;
     left: 0;
     width: 100%;
     display: flex;
@@ -66,7 +66,8 @@ const scrollApi = {
     scrollToBottom: () => {},
     scrollToTop   : () => {},
     isBottom      : () => {},
-    isTop         : () => {}
+    isTop         : () => {},
+    hideLoading   : () => {}
 };
 class Scroll extends Component {
     constructor() {
@@ -112,13 +113,20 @@ class Scroll extends Component {
         this.moving            = false;
         this.totalScrollHeight = 0;
         this.distance          = 0;
+
+        this.touchClientX      = 0;
+        this.touchClientY      = 0;
+        this.touchDeltaY       = null;
+
+        this.cycleMagicNumber  = 0.551915024494;
     }
     touchStart(e) {
         if(e.cancelable && !e.defaultPrevented) {
             e.preventDefault();
         }
-        this.touchStartY   = e.targetTouches[0].screenY;
-        this.currentOffset = this.state.translateY;
+        this.touchClientX = e.targetTouches[0].clientX;
+        this.touchClientY = e.targetTouches[0].clientY;
+        this.touchDeltaY = this.touchClientY;
         this.setState({
             animationDuration: 0
         });
@@ -128,84 +136,132 @@ class Scroll extends Component {
             e.preventDefault();
         }
         this.moving = true;
+        this.touchClientX = e.targetTouches[0].clientX;
+        this.touchClientY = e.targetTouches[0].clientY;
+        const distance = this.touchDeltaY - this.touchClientY;
+        this.touchDeltaY = this.touchClientY;
 
+        this.distance = distance;
 
-        this.distance = this.touchEndY - e.targetTouches[0].screenY;
-        this.touchEndY = e.targetTouches[0].screenY;
-
-        // 计算相对偏移量
-        this.targetOffset = this.currentOffset + this.touchEndY - this.touchStartY;
-
-        // 在顶部时，添加一定的阻尼
-        if(this.targetOffset >= 2) {
-            this.targetOffset = Math.cbrt(this.targetOffset * this.targetOffset);
-            this.pullDownDraw();
+        // 在顶部上拉或下拉
+        if(this.state.translateY >= 0) {
+            this.pullDown(distance);
+            return;
         }
-
-        // 在底部时，也添加一定的阻尼
-        if(this.targetOffset + this.totalScrollHeight < 0) {
-            this.targetOffset = 0 - this.totalScrollHeight;
-            this.pullUpDraw(e.targetTouches[0].clientX);
-            if(this.state.pullUpVisible === false) {
-                this.setState({
-                    pullUpVisible: true
-                })
-            }
-        } else {
-            this.setState({
-                pullUpVisible: false
-            })
+        // 在底部往上拉
+        if(distance > 0 && this.state.translateY + this.totalScrollHeight <= 0) {
+            this.pullUp(distance);
+            return;
         }
+        let offset = this.state.translateY - distance;
 
+        if(offset > 0) {
+            offset = 0;
+        }
+        if(offset < 0 - this.totalScrollHeight) {
+            offset = 0 - this.totalScrollHeight;
+        }
         this.setState({
-            translateY: this.targetOffset
-        });
+            translateY: offset,
+            pullUpVisible: false
+        })
     }
+
     touchEnd(e) {
         if(e.cancelable && !e.defaultPrevented) {
             e.preventDefault();
         }
-        const moved = this.moving;
+        const distance = this.moving ? this.distance : 0;
         this.moving = false;
-        const translateY = this.state.translateY;
-        if(translateY > 50) {
-            this.setState({
-                animationDuration: 500,
-                translateY: 50
-            }, () => {
-                this.pullDownDraw();
-            });
-            setTimeout(() => {
-                this.scrollToTop();
-            }, 2000);
-            return;
-        }
-        if(translateY > 0 && translateY < 50) {
-            this.setState({
-                animationDuration: 500
-            }, () => {
-                this.scrollToTop();
-            });
+
+        if(this.state.translateY === 100) {
+            this.props.onRefresh();
             return;
         }
 
-
-        const distance = moved ? this.distance : 0;
-
-        const bottomY = this.wrapperHeight - this.contentHeight;
-        let   targetY = this.state.translateY - distance * 20;
-        targetY = targetY > bottomY ? targetY : bottomY;
-        targetY = targetY > 0 ? 0 : targetY;
-
+        let offset = this.state.translateY - distance * 20;
+        if(offset === 100) {
+            return;
+        }
+        if(offset > 0) {
+            offset = 0;
+        }
+        if(offset < 0 - this.totalScrollHeight) {
+            offset = 0 - this.totalScrollHeight;
+        }
+        let duration = 1000;
+        if(Math.abs(offset - this.state.translateY) < 500) {
+            duration = 300;
+        }
         this.setState({
-            animationDuration: 1000,
-            translateY: targetY,
+            translateY: offset,
+            animationDuration: duration,
             pullUpVisible: false
         });
-        this.bottomCanvasContext.clearRect(0,0, this.wrapperWidth * 2, 80);
+    }
+    pullDown(distance) {
+        let offset = this.state.translateY - distance;
+        if(offset > 100) {
+            offset = 100;
+        }
+        this.setState({
+            translateY: offset
+        }, () => {
+            this.drawLoading();
+        });
+    }
+    drawLoading() {
+        const context = this.topCanvasContext;
+        const offset = this.state.translateY;
+        if(offset < 0) {
+            return;
+        }
+
+        context.clearRect(0, 0, 400, 400);
+        context.beginPath();
+        const centralY = 400 - 2 * offset;
+        const cycleMid   = {x: 200, y: centralY, r: 0};
+        const cycleLeft  = {x: 0,   y: centralY, r: 0};
+        const cycleRight = {x: 0,   y: centralY, r: 0};
+        if(offset < 30) {
+            cycleMid.r = offset;
+        } else if(offset >= 30 && offset < 50) {
+            cycleMid.r = 30;
+        } else if(offset >= 50 && offset < 80) {
+            cycleLeft.x  = 200 - (50 - offset);
+            cycleRight.x = 200 + (50 - offset);
+            cycleLeft.r  = cycleRight.r = 20- (80 - offset) * 2 / 3;
+            cycleMid.r   = 20 + (80 - offset) / 3;
+        } else {
+            cycleLeft.x  = 200 - (50 - offset) * 2;
+            cycleRight.x = 200 + (50 - offset) * 2;
+            cycleMid.r   = cycleLeft.r  = cycleRight.r = 20;
+        }
+        context.arc(cycleMid.x, cycleMid.y, cycleMid.r, 0, 2 * Math.PI);
+        context.fill();
+        context.arc(cycleLeft.x, cycleLeft.y, cycleLeft.r, 0, 2 * Math.PI);
+        context.fill();
+        context.arc(cycleRight.x, cycleRight.y, cycleRight.r, 0, 2 * Math.PI);
+        context.fill();
+    }
+    hideLoading(delay = 500) {
+        if(this.state.translateY <=0 || this.moving) {
+            return;
+        }
+        this.setState({
+            translateY: 0,
+            animationDuration: delay
+        });
+    }
+    pullUp(distance) {
+        this.setState({
+            pullUpVisible: true
+        }, () => {
+            this.pullUpDraw();
+        })
     }
     isBottom(offset = 40) {
-        return this.totalScrollHeight+ this.state.translateY <offset;
+        return this.totalScrollHeight+ this.state.translateY <= offset;
     }
     isTop() {
         return this.state.translateY === 0;
@@ -230,48 +286,45 @@ class Scroll extends Component {
             translateY: 0
         })
     }
-    pullUpDraw(x) {
+    pullUpDraw() {
+        const x = this.touchClientX;
         this.bottomCanvasContext.clearRect(0,0, this.wrapperWidth * 2, 80);
         this.bottomCanvasContext.beginPath();
         this.bottomCanvasContext.moveTo(0, 80);
         this.bottomCanvasContext.quadraticCurveTo(x, 0, this.wrapperWidth * 2, 80);
         this.bottomCanvasContext.fill();
-
     }
     pullDownDraw() {
-        this.topCanvasContext.clearRect(0, 0, 160, 160);
-        this.topCanvasContext.lineWidth = 0;
-        this.topCanvasContext.beginPath();
-        const offset = 20 * 0.551915024494;
-        let y = 110;
-        let yOffset = 0;
-        if(this.state.translateY >= 30) {
-            yOffset = this.state.translateY - 30;
-        }
-        y = y - yOffset;
-        this.topCanvasContext.moveTo(80, y);
-        if(y > 90) {
-            this.topCanvasContext.bezierCurveTo(80 + offset, y, 100, 130 - offset , 100, 130);
-            this.topCanvasContext.bezierCurveTo(100, 130 + offset, 80 + offset, 150, 80, 150);
-            this.topCanvasContext.bezierCurveTo(80 - offset, 150, 60, 130 + offset, 60, 130);
-            this.topCanvasContext.bezierCurveTo(60, 130 - offset, 80 - offset, y, 80, y);
-        } else {
-            this.topCanvasContext.strokeStyle = '#aaa';
-            this.topCanvasContext.bezierCurveTo(80 + offset, y, 100, 130 - yOffset - offset, 100, 130 - yOffset);
-            this.topCanvasContext.bezierCurveTo(100, 130 - yOffset + offset, 80 + offset, 150 - yOffset, 80, 150 - yOffset);
-            this.topCanvasContext.bezierCurveTo(80 - offset, 150 - yOffset, 60, 130 - yOffset + offset, 60, 130 - yOffset);
-            this.topCanvasContext.bezierCurveTo(60, 130 - yOffset - offset, 80 - offset, y, 80, y);
-        }
-        this.topCanvasContext.fill();
-
-        if(y <= 90) {
-            this.topCanvasContext.lineWidth = 4;
-            this.topCanvasContext.strokeStyle = '#fff';
-            this.topCanvasContext.moveTo(95, 130 - yOffset);
-            this.topCanvasContext.arc(80, 130 - yOffset, 15, 0, 1.8 * Math.PI);
-            this.topCanvasContext.stroke();
-        }
-
+        // this.topCanvasContext.clearRect(0, 0, 400, 400);
+        // this.topCanvasContext.lineWidth = 0;
+        // this.topCanvasContext.beginPath();
+        // const offset = 20 * 0.551915024494;
+        // let y = 110;
+        // let yOffset = 0;
+        // if(this.state.translateY >= 30) {
+        //     yOffset = this.state.translateY - 30;
+        // }
+        // y = y - yOffset;
+        // this.topCanvasContext.moveTo(80, y);
+        // if(y > 90) {
+        //     this.topCanvasContext.bezierCurveTo(80 + offset, y, 100, 130 - offset , 100, 130);
+        //     this.topCanvasContext.bezierCurveTo(100, 130 + offset, 80 + offset, 150, 80, 150);
+        //     this.topCanvasContext.bezierCurveTo(80 - offset, 150, 60, 130 + offset, 60, 130);
+        //     this.topCanvasContext.bezierCurveTo(60, 130 - offset, 80 - offset, y, 80, y);
+        // } else {
+        //     this.topCanvasContext.bezierCurveTo(80 + offset, y, 100, 130 - yOffset - offset, 100, 130 - yOffset);
+        //     this.topCanvasContext.bezierCurveTo(100, 130 - yOffset + offset, 80 + offset, 150 - yOffset, 80, 150 - yOffset);
+        //     this.topCanvasContext.bezierCurveTo(80 - offset, 150 - yOffset, 60, 130 - yOffset + offset, 60, 130 - yOffset);
+        //     this.topCanvasContext.bezierCurveTo(60, 130 - yOffset - offset, 80 - offset, y, 80, y);
+        // }
+        // this.topCanvasContext.fill();
+        //
+        // if(y <= 90) {
+        //     this.topCanvasContext.lineWidth = 2;
+        //     this.topCanvasContext.moveTo(92, 130 - yOffset);
+        //     this.topCanvasContext.arc(80, 130 - yOffset, 12, 0, 1.5 * Math.PI);
+        //     this.topCanvasContext.stroke();
+        // }
     }
     render() {
         const {translateY, animationDuration, pullUpVisible} = this.state;
@@ -313,16 +366,19 @@ class Scroll extends Component {
         this.wrapperHeight = this.wrapperElem.offsetHeight;
         this.wrapperWidth  = this.wrapperElem.offsetWidth;
         this.totalScrollHeight = this.contentHeight - this.wrapperHeight;
+        if(this.totalScrollHeight < 0) {
+            this.totalScrollHeight = 0;
+        }
     }
 
     // 初始化画布
     initCanvas() {
-        this.topCanvasElem.width = 160;
-        this.topCanvasElem.height = 160;
-        this.topCanvasElem.style.width = '80px';
-        this.topCanvasElem.style.height = '80px';
+        this.topCanvasElem.width = 400;
+        this.topCanvasElem.height = 400;
+        this.topCanvasElem.style.width = '100px';
+        this.topCanvasElem.style.height = '100px';
         this.topCanvasContext = this.topCanvasElem.getContext('2d');
-        this.topCanvasContext.strokeStyle = '#aaa';
+        this.topCanvasContext.strokeStyle = '#fff';
         this.topCanvasContext.fillStyle   = '#aaa';
 
         this.bottomCanvasElem.width = this.wrapperWidth * 2;
@@ -340,6 +396,7 @@ class Scroll extends Component {
         scrollApi.scrollToTop    = this.scrollToTop.bind(this);
         scrollApi.isBottom       = this.isBottom.bind(this);
         scrollApi.isTop          = this.isTop.bind(this);
+        scrollApi.hideLoading    = this.hideLoading.bind(this);
     }
 }
 export {Scroll as default, scrollApi};
