@@ -27,13 +27,16 @@ const messages = (state = initState, action) => {
     switch (action.type) {
         case MESSAGE_ADD:
             message = action.message;
-            verifyMessage(message);
             if(message.history) {
+                message = Object.assign({}, state.oldMessages.get(message.id) || {}, message);
+                verifyMessage(message);
                 return {
                     ...state,
                     oldMessages: state.oldMessages.set(message.id, message)
                 }
             } else {
+                message = Object.assign({}, state.newMessages.get(message.id) || {}, message);
+                verifyMessage(message);
                 return {
                     ...state,
                     newMessages: state.newMessages.set(message.id, message)

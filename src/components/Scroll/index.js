@@ -62,6 +62,7 @@ const PullUpCanvas = styled.canvas`
     top: 0;
 `;
 
+
 const scrollApi = {
     scrollToBottom: () => {},
     scrollToTop   : () => {},
@@ -78,15 +79,6 @@ class Scroll extends Component {
             pullUpVisible: false
         };
 
-        // 记录触摸开始和过程中的偏移量
-        this.touchStartY   = 0;
-        this.touchEndY     = 0;
-
-        // 记录当前的偏移量，下次移动从当前偏移量开始
-        this.currentOffset = 0;
-
-        // 记录最终的偏移量
-        this.targetOffset  = 0;
 
         // Scroll容器
         this.wrapper       = null;
@@ -119,11 +111,17 @@ class Scroll extends Component {
         this.touchDeltaY       = null;
 
         this.cycleMagicNumber  = 0.551915024494;
+
+        this.touchStart     = this.touchStart.bind(this);
+        this.touchMove      = this.touchMove.bind(this);
+        this.touchEnd       = this.touchEnd.bind(this);
+        this.scrollToBottom = this.scrollToBottom.bind(this);
+        this.scrollToTop    = this.scrollToTop.bind(this);
+        this.isBottom       = this.isBottom.bind(this);
+        this.isTop          = this.isTop.bind(this);
+        this.hideLoading    = this.hideLoading.bind(this);
     }
     touchStart(e) {
-        if(e.cancelable && !e.defaultPrevented) {
-            e.preventDefault();
-        }
         this.touchClientX = e.targetTouches[0].clientX;
         this.touchClientY = e.targetTouches[0].clientY;
         this.touchDeltaY = this.touchClientY;
@@ -168,9 +166,6 @@ class Scroll extends Component {
     }
 
     touchEnd(e) {
-        if(e.cancelable && !e.defaultPrevented) {
-            e.preventDefault();
-        }
         const distance = this.moving ? this.distance : 0;
         this.moving = false;
 
@@ -294,47 +289,16 @@ class Scroll extends Component {
         this.bottomCanvasContext.quadraticCurveTo(x, 0, this.wrapperWidth * 2, 80);
         this.bottomCanvasContext.fill();
     }
-    pullDownDraw() {
-        // this.topCanvasContext.clearRect(0, 0, 400, 400);
-        // this.topCanvasContext.lineWidth = 0;
-        // this.topCanvasContext.beginPath();
-        // const offset = 20 * 0.551915024494;
-        // let y = 110;
-        // let yOffset = 0;
-        // if(this.state.translateY >= 30) {
-        //     yOffset = this.state.translateY - 30;
-        // }
-        // y = y - yOffset;
-        // this.topCanvasContext.moveTo(80, y);
-        // if(y > 90) {
-        //     this.topCanvasContext.bezierCurveTo(80 + offset, y, 100, 130 - offset , 100, 130);
-        //     this.topCanvasContext.bezierCurveTo(100, 130 + offset, 80 + offset, 150, 80, 150);
-        //     this.topCanvasContext.bezierCurveTo(80 - offset, 150, 60, 130 + offset, 60, 130);
-        //     this.topCanvasContext.bezierCurveTo(60, 130 - offset, 80 - offset, y, 80, y);
-        // } else {
-        //     this.topCanvasContext.bezierCurveTo(80 + offset, y, 100, 130 - yOffset - offset, 100, 130 - yOffset);
-        //     this.topCanvasContext.bezierCurveTo(100, 130 - yOffset + offset, 80 + offset, 150 - yOffset, 80, 150 - yOffset);
-        //     this.topCanvasContext.bezierCurveTo(80 - offset, 150 - yOffset, 60, 130 - yOffset + offset, 60, 130 - yOffset);
-        //     this.topCanvasContext.bezierCurveTo(60, 130 - yOffset - offset, 80 - offset, y, 80, y);
-        // }
-        // this.topCanvasContext.fill();
-        //
-        // if(y <= 90) {
-        //     this.topCanvasContext.lineWidth = 2;
-        //     this.topCanvasContext.moveTo(92, 130 - yOffset);
-        //     this.topCanvasContext.arc(80, 130 - yOffset, 12, 0, 1.5 * Math.PI);
-        //     this.topCanvasContext.stroke();
-        // }
-    }
     render() {
         const {translateY, animationDuration, pullUpVisible} = this.state;
         return (
             <Wrapper
                 ref={ref => this.wrapper = ref}
                 style={this.props.style}
-                onTouchStart={this.touchStart.bind(this)}
-                onTouchMove={this.touchMove.bind(this)}
-                onTouchEnd={this.touchEnd.bind(this)}>
+                className={this.props.className}
+                onTouchStart={this.touchStart}
+                onTouchMove={this.touchMove}
+                onTouchEnd={this.touchEnd}>
                 <PullDown translateY={translateY}>
                     <PullDownCanvas ref={ref => this.topCanvas = ref}/>
                 </PullDown>
@@ -392,11 +356,11 @@ class Scroll extends Component {
 
     // 初始化接口
     initApi() {
-        scrollApi.scrollToBottom = this.scrollToBottom.bind(this);
-        scrollApi.scrollToTop    = this.scrollToTop.bind(this);
-        scrollApi.isBottom       = this.isBottom.bind(this);
-        scrollApi.isTop          = this.isTop.bind(this);
-        scrollApi.hideLoading    = this.hideLoading.bind(this);
+        scrollApi.scrollToBottom = this.scrollToBottom;
+        scrollApi.scrollToTop    = this.scrollToTop;
+        scrollApi.isBottom       = this.isBottom;
+        scrollApi.isTop          = this.isTop;
+        scrollApi.hideLoading    = this.hideLoading;
     }
 }
 export {Scroll as default, scrollApi};

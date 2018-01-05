@@ -31,6 +31,10 @@ module.exports = {
         new HtmlWebpackPlugin({
             filename: 'index.html',
             template: path.resolve(base, 'index.html')
+        }),
+        new webpack.optimize.UglifyJsPlugin({
+            output  : {comments: false},
+            compress: {warnings: false}
         })
     ],
     devServer: {
