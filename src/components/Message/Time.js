@@ -12,5 +12,8 @@ class Time extends PureComponent {
             </TimeWrapper>
         );
     }
+    componentDidMount() {
+        this.props.message.resolve();
+    }
 }
 export default Time;

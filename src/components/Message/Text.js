@@ -14,13 +14,13 @@ class Text extends PureComponent {
         this.props.resend(this.props.message);
     }
     render() {
-        const message = this.props.message;
         const {side, avatar, nickname, data, resend} = this.props.message;
         return (
             <TextWrapper className={classnames(`message_${side.toLowerCase()}`)}>
+
                 {nickname && <TextNickname className="message__nickname">{nickname}</TextNickname>}
                 {avatar && <TextAvatar className="message__avatar" src={avatar}/>}
-                <TextContent className={classnames('message__text', `message__text_${side.toLowerCase()}`)}>{data}</TextContent>
+                <TextContent className={classnames('message__text', `message__text_${side.toLowerCase()}`)} dangerouslySetInnerHTML={{__html: data}}/>
                 {resend === true && <TextResend onClick={this.resendMessage} className="message__resend"/>}
             </TextWrapper>
         );

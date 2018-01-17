@@ -42,35 +42,11 @@ injectGlobal`
         border-top-right-radius: 4px;
         color: #fff;
         margin-right: 10px;
-        // z-index: 1;
-        // &:after {
-        //     width: 10px;
-        //     height: 10px;
-        //     content: '';
-        //     position: absolute;
-        //     right: -1px;
-        //     top: 50%;
-        //     z-index: 0;
-        //     background-color: #b2e281;
-        //     transform: rotate(45deg) translateY(-50%);
-        // }
     }
     .message__text_left {
         background-color: #fff;
         border-top-left-radius: 4px;
         margin-left: 10px;
-        // z-index: 1;
-        // &:after {
-        //     width: 10px;
-        //     height: 10px;
-        //     content: '';
-        //     position: absolute;
-        //     left: -9px;
-        //     top: 50%;
-        //     z-index: 0;
-        //     background-color: #fff;
-        //     transform: rotate(45deg) translateY(-50%);
-        // }
     }
     .message__image_right{
         margin-right: 10px;

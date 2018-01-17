@@ -2,7 +2,7 @@
  * Created by lvcy on 17-12-29.
  */
 import Immutable from 'immutable';
-import {MESSAGE_ADD} from './actions';
+import {MESSAGE_ADD, MESSAGE_DEL} from './actions';
 import {combineReducers} from 'redux';
 const initState = {
     newMessages: Immutable.OrderedMap(),
@@ -42,6 +42,13 @@ const messages = (state = initState, action) => {
                     newMessages: state.newMessages.set(message.id, message)
                 }
             }
+            break;
+        case MESSAGE_DEL:
+            const messageId = action.id;
+            return {
+                ...state,
+                newMessages: state.newMessages.delete(messageId)
+            };
             break;
         default:
             return initState;

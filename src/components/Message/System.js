@@ -12,5 +12,8 @@ class System extends PureComponent {
             </SystemWrapper>
         );
     }
+    componentDidMount() {
+        this.props.message.resolve();
+    }
 }
 export default System;

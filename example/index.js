@@ -19,8 +19,10 @@ const resend = (message) => {
         resend: false
     });
 };
-ReactDOM.render(<ChatScroll style={{flex: 1}} onRefresh={refresh} onResend={resend}/>, document.querySelector('#root'));
-for(let i = 1; i < 2; i = i + 2) {
+ReactDOM.render(
+    <ChatScroll canRefresh={false} onRefresh={refresh} scrollBar={true} onResend={resend}/>
+    , document.querySelector('#root'));
+for(let i = 1; i < 80; i = i + 2) {
     api.message.add({
         id: i,
         data: `${i}: 你好`,
@@ -50,15 +52,22 @@ for(let i = 1; i < 2; i = i + 2) {
 
 api.message.add({
     id: 5,
-    data: {
-        url : '//img13.360buyimg.com/ee/jfs/t13351/84/2471548083/10051/b258141/5a4dc33aNaef9fa6f.jpg',
-        blob: '',
-        progress: 0,
-    },
-    type: Constant.type.IMAGE,
-    side: Constant.side.LEFT,
-    avatar: '//img13.360buyimg.com/ee/jfs/t3100/53/3349569343/26913/4e9280da/57f2291dN68afd214.png'
+    type: Constant.type.COMPONENT,
+    data: {}
 });
+class Person extends React.Component {
+    render() {
+        return (<div>{this.props.name}</div>)
+    }
+}
+setTimeout(() => {
+    api.message.add({
+        id: 5,
+        type: Constant.type.COMPONENT,
+        data: {name: 'lvchenyang'},
+        component: Person
+    })
+}, 1000);
 
 api.message.add({
     id: 4,

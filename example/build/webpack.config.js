@@ -28,20 +28,20 @@ module.exports = {
                 NODE_ENV: JSON.stringify(process.env.NODE_ENV),
             },
         }),
-        new HtmlWebpackPlugin({
-            filename: 'index.html',
-            template: path.resolve(base, 'index.html')
-        }),
-        new webpack.optimize.UglifyJsPlugin({
-            output  : {comments: false},
-            compress: {warnings: false}
-        })
+        // new HtmlWebpackPlugin({
+        //     filename: 'index.html',
+        //     template: path.resolve(base, 'index.html')
+        // }),
+        // new webpack.optimize.UglifyJsPlugin({
+        //     output  : {comments: false},
+        //     compress: {warnings: false}
+        // })
     ],
     devServer: {
         contentBase: path.resolve(base, 'dist'),
         compress: false,
         port: 9001,
-        host: '127.0.0.1',
+        host: '10.14.143.19',
         hot : true,
         inline: true,
         watchOptions: {

@@ -4,12 +4,14 @@
 
 import React, {Component} from 'react';
 import styled from 'styled-components';
+import Message from '../Message';
 const Wrapper = styled.div`
     height: 100%;
     width : 100%;
     overflow: hidden;
     position: relative;
     box-sizing: border-box;
+    flex: 1 1 auto;
     & * {
         box-sizing: border-box;
     }
@@ -45,23 +47,48 @@ const PullDownCanvas = styled.canvas`
     top: 0;
     transform: translateX(-50%);
 `;
-const PullUp = styled.div.attrs({
+const WaveContainer = styled.div.attrs({
     style: (props) => ({
-        display: props.visible ? 'block' : 'none'
+        display: props.visible ? 'block' : 'none',
+        bottom : props.position === 'top' ? 'auto' : 0,
+        top    : props.position === 'bottom' ? 'auto' : 0
     })
 })`
     height: 40px;
     left: 0;
-    bottom: 0px;
     position: absolute;
     width: 100%;
 `;
-const PullUpCanvas = styled.canvas`
+const WaveCanvas = styled.canvas`
     position: absolute;
     left: 0;
     top: 0;
 `;
-
+const ScrollBarWrapper = styled.div.attrs({
+    style: (props) => ({
+        display: `${props.visible ? 'block' : 'none'}`,
+        height: `${props.wrapperHeight}px`
+    })
+})`
+    position: absolute;
+    width: 6px;
+    top: 0;
+    right: 0;
+`;
+const ScrollBarDrager = styled.div.attrs({
+    style: (props) => ({
+        height: `${props.barHeight}px`,
+        top: `${props.barTop}px`,
+        transitionDuration: `${props.duration}ms`,
+        background: 'rgba(0,0,0,.5)'
+    })
+})`
+    position: absolute;
+    right: 0;
+    width: 6px;
+    border-radius: 3px;
+    cursor: pointer;
+`;
 
 const scrollApi = {
     scrollToBottom: () => {},
@@ -76,7 +103,9 @@ class Scroll extends Component {
         this.state = {
             translateY: 0,
             animationDuration: 0,
-            pullUpVisible: false
+            waveContainerVisible: false,
+            dragging: false,
+            wavePosition: 'bottom'
         };
 
 
@@ -91,15 +120,17 @@ class Scroll extends Component {
         this.contentElem   = null;
         this.contentHeight = 0;
 
+        this.scrollBar = null;
+
         // 顶部画布
         this.topCanvas        = null;
         this.topCanvasElem    = null;
         this.topCanvasContext = null;
 
         // 底端画布
-        this.bottomCanvas        = null;
-        this.bottomCanvasElem    = null;
-        this.bottomCanvasContext = null;
+        this.waveCanvas        = null;
+        this.waveCanvasElem    = null;
+        this.waveCanvasContext = null;
 
         // 用于记录是否在移动中
         this.moving            = false;
@@ -110,16 +141,28 @@ class Scroll extends Component {
         this.touchClientY      = 0;
         this.touchDeltaY       = null;
 
-        this.cycleMagicNumber  = 0.551915024494;
+        this.scrollOffsetY = 0;
+        this.scrollToTopTimer = null;
+
+        this.prevItemCount    = 0;
+        this.nextItemCount    = 0;
+        this.prevScrollHeight = 0;
+        this.nextScrollHeight = 0;
 
         this.touchStart     = this.touchStart.bind(this);
         this.touchMove      = this.touchMove.bind(this);
         this.touchEnd       = this.touchEnd.bind(this);
         this.scrollToBottom = this.scrollToBottom.bind(this);
         this.scrollToTop    = this.scrollToTop.bind(this);
+        this.scrollOffset   = this.scrollOffset.bind(this);
         this.isBottom       = this.isBottom.bind(this);
         this.isTop          = this.isTop.bind(this);
         this.hideLoading    = this.hideLoading.bind(this);
+        this.mouseWheel     = this.mouseWheel.bind(this);
+
+        this.scrollBarMouseDown  = this.scrollBarMouseDown.bind(this);
+        this.scrollBarMouseMove  = this.scrollBarMouseMove.bind(this);
+        this.scrollBarMouseUp    = this.scrollBarMouseUp.bind(this);
     }
     touchStart(e) {
         this.touchClientX = e.targetTouches[0].clientX;
@@ -161,7 +204,7 @@ class Scroll extends Component {
         }
         this.setState({
             translateY: offset,
-            pullUpVisible: false
+            waveContainerVisible: false
         })
     }
 
@@ -170,7 +213,7 @@ class Scroll extends Component {
         this.moving = false;
 
         if(this.state.translateY === 100) {
-            this.props.onRefresh();
+            this.props.onRefresh && this.props.onRefresh();
             return;
         }
 
@@ -191,21 +234,63 @@ class Scroll extends Component {
         this.setState({
             translateY: offset,
             animationDuration: duration,
-            pullUpVisible: false
+            waveContainerVisible: false
         });
     }
-    pullDown(distance) {
+    mouseWheel(e) {
+        const {deltaX, deltaY} = e;
+        const distance = deltaY - deltaX;
         let offset = this.state.translateY - distance;
-        if(offset > 100) {
-            offset = 100;
+        if(offset > 0) {
+            offset = 0;
+        }
+        if(offset < 0 - this.totalScrollHeight) {
+            offset = 0 - this.totalScrollHeight;
+        }
+        if(offset === 0) {
+            clearTimeout(this.scrollToTopTimer);
+            this.scrollToTopTimer = setTimeout(() => {
+                if(this.props.onScrollTop) {
+                    this.props.onScrollTop();
+                }
+            }, 100);
         }
         this.setState({
-            translateY: offset
-        }, () => {
-            this.drawLoading();
-        });
+            translateY: offset,
+            animationDuration: 0,
+            waveContainerVisible: false
+        })
     }
-    drawLoading() {
+    pullDown(distance) {
+        if(this.props.canRefresh) {
+            let offset = this.state.translateY - distance;
+            if(offset > 100) {
+                offset = 100;
+            }
+            this.setState({
+                translateY: offset,
+            }, () => {
+                this.drawTopLoading();
+            });
+        } else {
+
+            let offset = this.state.translateY - distance;
+            if(offset > 0) {
+                offset = 0;
+            }
+
+            this.setState({
+                translateY: offset,
+                waveContainerVisible: this.props.topWave !== false
+            }, () => {
+                if(this.props.topWave === false) {
+                    return;
+                }
+                this.drawWave('top');
+            });
+        }
+    }
+    drawTopLoading() {
         const context = this.topCanvasContext;
         const offset = this.state.translateY;
         if(offset < 0) {
@@ -250,9 +335,12 @@ class Scroll extends Component {
     }
     pullUp(distance) {
         this.setState({
-            pullUpVisible: true
+            waveContainerVisible: this.props.bottomWave !== false
         }, () => {
-            this.pullUpDraw();
+            if(this.props.bottomWave === false) {
+                return;
+            }
+            this.drawWave('bottom');
         })
     }
     isBottom(offset = 40) {
@@ -261,53 +349,165 @@ class Scroll extends Component {
     isTop() {
         return this.state.translateY === 0;
     }
+    getProcess() {
+        return 0 - (this.state.translateY /  this.totalScrollHeight);
+    }
     scrollToBottom() {
         if(this.moving) {
             return;
         }
+        this.initElementHeight();
         if(this.wrapperHeight > this.contentHeight) {
             this.scrollToTop();
             return;
         }
         this.setState({
-            translateY: this.wrapperHeight - this.contentHeight
+            translateY: this.wrapperHeight - this.contentHeight,
         })
     }
-    scrollToTop() {
+    scrollToTop(duration) {
         if(this.moving) {
             return;
         }
+        const prevDuration = this.state.animationDuration;
         this.setState({
-            translateY: 0
+            translateY: 0,
+            animationDuration: duration || 0
+        }, () => {
+            this.setState({
+                animationDuration: prevDuration
+            })
         })
     }
-    pullUpDraw() {
+    scrollOffset(offset, duration) {
+        if(this.moving) {
+            return;
+        }
+        const prevDuration = this.state.animationDuration;
+        offset = this.state.translateY + offset;
+        if(offset > 0) {
+            offset = 0;
+        }
+        if(offset < 0 - this.totalScrollHeight) {
+            offset = 0 - this.totalScrollHeight;
+        }
+        this.setState({
+            translateY: offset,
+            animationDuration: duration
+        }, () => {
+            this.setState({
+                animationDuration: prevDuration
+            })
+        })
+
+
+    }
+    drawWave(type) {
         const x = this.touchClientX;
-        this.bottomCanvasContext.clearRect(0,0, this.wrapperWidth * 2, 80);
-        this.bottomCanvasContext.beginPath();
-        this.bottomCanvasContext.moveTo(0, 80);
-        this.bottomCanvasContext.quadraticCurveTo(x, 0, this.wrapperWidth * 2, 80);
-        this.bottomCanvasContext.fill();
+        this.waveCanvasContext.clearRect(0,0, this.wrapperWidth * 2, 80);
+        this.waveCanvasContext.beginPath();
+        if(type === 'bottom') {
+            // 移动waveContainer的位置
+            this.setState({
+                wavePosition: 'bottom'
+            });
+            this.waveCanvasContext.moveTo(0, 80);
+            this.waveCanvasContext.quadraticCurveTo(x, 0, this.wrapperWidth * 2, 80);
+            this.waveCanvasContext.fill();
+        } else {
+            this.setState({
+                wavePosition: 'top'
+            });
+            this.waveCanvasContext.moveTo(0, 0);
+            this.waveCanvasContext.quadraticCurveTo(x, 80, this.wrapperWidth * 2, 0);
+            this.waveCanvasContext.fill();
+        }
+
+    }
+    scrollBarMouseDown(e) {
+        if(e.cancelable && !e.defaultPrevented) {
+            e.preventDefault();
+        }
+        e.stopPropagation();
+        this.scrollOffsetY = e.clientY - this.getProcess() * this.wrapperHeight;
+        this.setState({
+            dragging: true
+        })
+    }
+    scrollBarMouseMove(e) {
+        if(this.state.dragging === false) {
+            return;
+        }
+        if(e.cancelable && !e.defaultPrevented) {
+            e.preventDefault();
+        }
+        e.stopPropagation();
+        const clientY = e.clientY;
+        const relativeClientY = clientY - this.scrollOffsetY;
+        let offset = relativeClientY * this.totalScrollHeight / (0 - this.wrapperHeight);
+        if(offset > 0) {
+            offset = 0;
+        }
+        if(offset < 0 - this.totalScrollHeight) {
+            offset = 0 - this.totalScrollHeight;
+        }
+        if(offset === 0) {
+            clearTimeout(this.scrollToTopTimer);
+            this.scrollToTopTimer = setTimeout(() => {
+                if(this.props.onScrollTop) {
+                    this.props.onScrollTop();
+                }
+            }, 100);
+        }
+        this.setState({
+            translateY: offset
+        });
+    }
+    scrollBarMouseUp(e) {
+        if(this.state.dragging === false) {
+            return;
+        }
+        if(e.cancelable && !e.defaultPrevented) {
+            e.preventDefault();
+        }
+        e.stopPropagation();
+        this.setState({
+            dragging: false
+        });
     }
     render() {
-        const {translateY, animationDuration, pullUpVisible} = this.state;
+        const {translateY, animationDuration, waveContainerVisible, wavePosition} = this.state;
+        const {scrollBar, children} = this.props;
+        const process = this.getProcess();
+        const scrollBarHeight = 80;
+        const scrollBarTop    = (this.wrapperHeight - scrollBarHeight) * process;
+        const showScrollBar = this.wrapperHeight - this.contentHeight < 0 && scrollBar;
         return (
             <Wrapper
                 ref={ref => this.wrapper = ref}
-                style={this.props.style}
                 className={this.props.className}
                 onTouchStart={this.touchStart}
                 onTouchMove={this.touchMove}
-                onTouchEnd={this.touchEnd}>
+                onTouchEnd={this.touchEnd}
+                onWheel={this.mouseWheel}>
                 <PullDown translateY={translateY}>
                     <PullDownCanvas ref={ref => this.topCanvas = ref}/>
                 </PullDown>
                 <Content translateY={translateY} duration={animationDuration} ref={ref => this.content = ref}>
-                    {this.props.children}
+                    {children}
                 </Content>
-                <PullUp visible={pullUpVisible}>
-                    <PullUpCanvas ref={ref => this.bottomCanvas = ref}/>
-                </PullUp>
+                <WaveContainer visible={waveContainerVisible} position={wavePosition}>
+                    <WaveCanvas ref={ref => this.waveCanvas = ref}/>
+                </WaveContainer>
+                <ScrollBarWrapper visible={showScrollBar} wrapperHeight={this.wrapperHeight}>
+                    <ScrollBarDrager
+                        ref={ref=> this.scrollBar = ref}
+                        barTop={scrollBarTop}
+                        barHeight={scrollBarHeight}
+                        duration={animationDuration}
+                        onMouseDown={this.scrollBarMouseDown}
+                    />
+                </ScrollBarWrapper>
             </Wrapper>
         );
     }
@@ -315,13 +515,37 @@ class Scroll extends Component {
         this.contentElem = document.getElementsByClassName(this.content.state.generatedClassName)[0];
         this.wrapperElem = document.getElementsByClassName(this.wrapper.state.generatedClassName)[0];
         this.topCanvasElem  = document.getElementsByClassName(this.topCanvas.state.generatedClassName)[0];
-        this.bottomCanvasElem = document.getElementsByClassName(this.bottomCanvas.state.generatedClassName)[0];
+        this.waveCanvasElem = document.getElementsByClassName(this.waveCanvas.state.generatedClassName)[0];
+
         this.initElementHeight();
         this.initCanvas();
         this.initApi();
     }
+    componentWillUpdate(nextProps) {
+        const {children} = nextProps;
+        if(children) {
+            this.prevScrollHeight = this.totalScrollHeight;
+            this.nextItemCount = children.size;
+        }
+    }
     componentDidUpdate() {
         this.initElementHeight();
+        if(this.state.dragging) {
+            document.addEventListener('mousemove', this.scrollBarMouseMove);
+            document.addEventListener('mouseup', this.scrollBarMouseUp);
+        } else {
+            document.removeEventListener('mousemove', this.scrollBarMouseMove);
+            document.removeEventListener('mouseup', this.scrollBarMouseUp);
+        }
+        if(this.nextItemCount > this.prevItemCount) {
+            this.prevItemCount = this.nextItemCount;
+            this.nextScrollHeight = this.totalScrollHeight;
+            const offsetScrollHeight = this.nextScrollHeight - this.prevScrollHeight;
+            this.setState({
+                translateY: this.state.translateY - offsetScrollHeight,
+                animationDuration: 0
+            });
+        }
     }
 
     // 初始化元素高度
@@ -345,19 +569,20 @@ class Scroll extends Component {
         this.topCanvasContext.strokeStyle = '#fff';
         this.topCanvasContext.fillStyle   = '#aaa';
 
-        this.bottomCanvasElem.width = this.wrapperWidth * 2;
-        this.bottomCanvasElem.height = 80;
-        this.bottomCanvasElem.style.width = this.wrapperWidth + 'px';
-        this.bottomCanvasElem.style.height = '40px';
-        this.bottomCanvasContext = this.bottomCanvasElem.getContext('2d');
-        this.bottomCanvasContext.fillStyle   = '#000';
-        this.bottomCanvasContext.globalAlpha = 0.1;
+        this.waveCanvasElem.width = this.wrapperWidth * 2;
+        this.waveCanvasElem.height = 80;
+        this.waveCanvasElem.style.width = this.wrapperWidth + 'px';
+        this.waveCanvasElem.style.height = '40px';
+        this.waveCanvasContext = this.waveCanvasElem.getContext('2d');
+        this.waveCanvasContext.fillStyle   = '#000';
+        this.waveCanvasContext.globalAlpha = 0.1;
     }
 
     // 初始化接口
     initApi() {
         scrollApi.scrollToBottom = this.scrollToBottom;
         scrollApi.scrollToTop    = this.scrollToTop;
+        scrollApi.scrollOffset   = this.scrollOffset;
         scrollApi.isBottom       = this.isBottom;
         scrollApi.isTop          = this.isTop;
         scrollApi.hideLoading    = this.hideLoading;

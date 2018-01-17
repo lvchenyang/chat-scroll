@@ -3,12 +3,22 @@
  */
 import React, {PureComponent} from 'react';
 import {connect} from 'react-redux';
-import {messageAdd} from '../../store/actions';
+import {messageAdd, messageDel} from '../../store/actions';
 import Message from '../Message';
 import Scroll, {scrollApi} from '../Scroll';
 import Album from '../Album';
 import Constant from '../../Constant';
+import styled from 'styled-components';
 
+const ChatListWrapper = styled.div`
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+`;
 const api = {
     message: {},
     scrollToBottom: () => {},
@@ -30,18 +40,22 @@ class ChatList extends PureComponent {
         const list = oldMessages.reverse().concat(newMessages).toList();
         const images = list.filter(item => item.type === Constant.type.IMAGE);
         return (
-            <Scroll {...this.props} onRefresh={onRefresh || (() => {})}>
+            <ChatListWrapper style={this.props.style}>
                 <Album visible={this.state.albumVisible} close={this.hideAlbum} url={this.state.albumUrl}/>
-                {list.map(item =><Message key={item.id} message={item} showAlbum={this.showAlbum} resend={this.resend}/>)}
-            </Scroll>
+                <Scroll {...this.props} onRefresh={onRefresh || (() => {})}>
+                    {list.map(item =><Message key={item.id} message={item} showAlbum={this.showAlbum} resend={this.resend}/>)}
+                </Scroll>
+            </ChatListWrapper>
         );
     }
     componentDidMount() {
         api.scrollToBottom = scrollApi.scrollToBottom;
         api.scrollToTop    = scrollApi.scrollToTop;
+        api.scrollOffset   = scrollApi.scrollOffset;
         api.isBottom       = scrollApi.isBottom;
         api.isTop          = scrollApi.isTop;
         api.hideLoading    = scrollApi.hideLoading;
+
     }
 
     // 显示相册
@@ -72,9 +86,13 @@ const mapReducerToProps = (dispatch, props) => {
             messageAdd(dispatch, message);
         })
     };
+    api.message.del = (messageId) => {
+        messageDel(dispatch, messageId);
+    };
     return {
         ...props,
-        messageAdd: api.message.add
+        messageAdd: api.message.add,
+        messageDel: api.message.del
     }
 };
 const mapStateToProps = (state) => {
