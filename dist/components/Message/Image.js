@@ -54,6 +54,9 @@ var Image = function (_PureComponent) {
             resend = _props$message.resend;
 
         var src = data.url || data.blob;
+        if (src === '') {
+            src = '';
+        }
         return _react2.default.createElement(
             _ImageStyled.ImageWrapper,
             { className: (0, _classnames2.default)('message_' + side.toLowerCase()) },

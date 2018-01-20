@@ -73,14 +73,14 @@ const ScrollBarWrapper = styled.div.attrs({
     position: absolute;
     width: 6px;
     top: 0;
-    right: 0;
+    right: 2px;
 `;
 const ScrollBarDrager = styled.div.attrs({
     style: (props) => ({
         height: `${props.barHeight}px`,
         top: `${props.barTop}px`,
         transitionDuration: `${props.duration}ms`,
-        background: 'rgba(0,0,0,.5)'
+        background: 'rgba(155,155,155,.4)'
     })
 })`
     position: absolute;

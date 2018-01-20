@@ -9,7 +9,7 @@ var _templateObject = _taggedTemplateLiteralLoose(['\n    height: 100%;\n    wid
     _templateObject4 = _taggedTemplateLiteralLoose(['\n    position: absolute;\n    left: 50%;\n    top: 0;\n    transform: translateX(-50%);\n'], ['\n    position: absolute;\n    left: 50%;\n    top: 0;\n    transform: translateX(-50%);\n']),
     _templateObject5 = _taggedTemplateLiteralLoose(['\n    height: 40px;\n    left: 0;\n    position: absolute;\n    width: 100%;\n'], ['\n    height: 40px;\n    left: 0;\n    position: absolute;\n    width: 100%;\n']),
     _templateObject6 = _taggedTemplateLiteralLoose(['\n    position: absolute;\n    left: 0;\n    top: 0;\n'], ['\n    position: absolute;\n    left: 0;\n    top: 0;\n']),
-    _templateObject7 = _taggedTemplateLiteralLoose(['\n    position: absolute;\n    width: 6px;\n    top: 0;\n    right: 0;\n'], ['\n    position: absolute;\n    width: 6px;\n    top: 0;\n    right: 0;\n']),
+    _templateObject7 = _taggedTemplateLiteralLoose(['\n    position: absolute;\n    width: 6px;\n    top: 0;\n    right: 2px;\n'], ['\n    position: absolute;\n    width: 6px;\n    top: 0;\n    right: 2px;\n']),
     _templateObject8 = _taggedTemplateLiteralLoose(['\n    position: absolute;\n    right: 0;\n    width: 6px;\n    border-radius: 3px;\n    cursor: pointer;\n'], ['\n    position: absolute;\n    right: 0;\n    width: 6px;\n    border-radius: 3px;\n    cursor: pointer;\n']);
 
 var _react = require('react');
@@ -78,7 +78,7 @@ var ScrollBarDrager = _styledComponents2.default.div.attrs({
             height: props.barHeight + 'px',
             top: props.barTop + 'px',
             transitionDuration: props.duration + 'ms',
-            background: 'rgba(0,0,0,.5)'
+            background: 'rgba(155,155,155,.4)'
         };
     }
 })(_templateObject8);
