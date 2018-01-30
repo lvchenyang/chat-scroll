@@ -60,7 +60,8 @@ var messages = function messages() {
         case _actions.MESSAGE_DEL:
             var messageId = action.id;
             return _extends({}, state, {
-                newMessages: state.newMessages.delete(messageId)
+                newMessages: state.newMessages.delete(messageId),
+                oldMessages: state.oldMessages.delete(messageId)
             });
             break;
         default:

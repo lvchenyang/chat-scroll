@@ -72,13 +72,22 @@ var Message = function (_PureComponent) {
     function Message() {
         _classCallCheck(this, Message);
 
-        return _possibleConstructorReturn(this, _PureComponent.apply(this, arguments));
+        var _this = _possibleConstructorReturn(this, _PureComponent.call(this));
+
+        _this.contextMenu = _this.contextMenu.bind(_this);
+        return _this;
     }
+
+    Message.prototype.contextMenu = function contextMenu(e) {
+        if (this.props.onContextMenu) {
+            this.props.onContextMenu(this.props.message, e);
+        }
+    };
 
     Message.prototype.wrapper = function wrapper(C) {
         return _react2.default.createElement(
             Wrapper,
-            { className: 'message' },
+            { className: 'message', onContextMenu: this.contextMenu },
             _react2.default.createElement(C, this.props)
         );
     };

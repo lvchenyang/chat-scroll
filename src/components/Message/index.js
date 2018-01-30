@@ -72,9 +72,18 @@ const Wrapper = styled.div`
     padding: 0 10px;
 `;
 class Message extends PureComponent {
+    constructor() {
+        super();
+        this.contextMenu = this.contextMenu.bind(this);
+    }
+    contextMenu(e) {
+        if(this.props.onContextMenu) {
+            this.props.onContextMenu(this.props.message, e);
+        }
+    }
     wrapper(C) {
         return (
-            <Wrapper className="message"><C {...this.props}/></Wrapper>
+            <Wrapper className="message" onContextMenu={this.contextMenu}><C {...this.props}/></Wrapper>
         );
     }
     render() {

@@ -47,7 +47,8 @@ const messages = (state = initState, action) => {
             const messageId = action.id;
             return {
                 ...state,
-                newMessages: state.newMessages.delete(messageId)
+                newMessages: state.newMessages.delete(messageId),
+                oldMessages: state.oldMessages.delete(messageId)
             };
             break;
         default:

@@ -70,6 +70,7 @@ var ChatList = function (_PureComponent) {
         _this.showAlbum = _this.showAlbum.bind(_this);
         _this.hideAlbum = _this.hideAlbum.bind(_this);
         _this.resend = _this.resend.bind(_this);
+        _this.contextMenu = _this.contextMenu.bind(_this);
         return _this;
     }
 
@@ -93,7 +94,7 @@ var ChatList = function (_PureComponent) {
                 _Scroll2.default,
                 _extends({}, this.props, { onRefresh: onRefresh || function () {} }),
                 list.map(function (item) {
-                    return _react2.default.createElement(_Message2.default, { key: item.id, message: item, showAlbum: _this2.showAlbum, resend: _this2.resend });
+                    return _react2.default.createElement(_Message2.default, { key: item.id, message: item, showAlbum: _this2.showAlbum, resend: _this2.resend, onContextMenu: _this2.contextMenu });
                 })
             )
         );
@@ -129,6 +130,14 @@ var ChatList = function (_PureComponent) {
 
     ChatList.prototype.resend = function resend(message) {
         this.props.onResend && this.props.onResend(message);
+    };
+
+    ChatList.prototype.contextMenu = function contextMenu(message, e) {
+        if (this.props.onContextMenu) {
+            e.stopPropagation();
+            e.preventDefault();
+            this.props.onContextMenu(message, e);
+        }
     };
 
     return ChatList;

@@ -31,9 +31,10 @@ class ChatList extends PureComponent {
             albumVisible: false,
             albumUrl    : ''
         };
-        this.showAlbum = this.showAlbum.bind(this);
-        this.hideAlbum = this.hideAlbum.bind(this);
-        this.resend    = this.resend.bind(this);
+        this.showAlbum   = this.showAlbum.bind(this);
+        this.hideAlbum   = this.hideAlbum.bind(this);
+        this.resend      = this.resend.bind(this);
+        this.contextMenu = this.contextMenu.bind(this);
     }
     render() {
         const {oldMessages, newMessages, onRefresh} = this.props;
@@ -43,7 +44,7 @@ class ChatList extends PureComponent {
             <ChatListWrapper style={this.props.style}>
                 <Album visible={this.state.albumVisible} close={this.hideAlbum} url={this.state.albumUrl}/>
                 <Scroll {...this.props} onRefresh={onRefresh || (() => {})}>
-                    {list.map(item =><Message key={item.id} message={item} showAlbum={this.showAlbum} resend={this.resend}/>)}
+                    {list.map(item =><Message key={item.id} message={item} showAlbum={this.showAlbum} resend={this.resend} onContextMenu={this.contextMenu}/>)}
                 </Scroll>
             </ChatListWrapper>
         );
@@ -75,6 +76,13 @@ class ChatList extends PureComponent {
 
     resend(message) {
         this.props.onResend && this.props.onResend(message);
+    }
+    contextMenu(message, e) {
+        if(this.props.onContextMenu) {
+            e.stopPropagation();
+            e.preventDefault();
+            this.props.onContextMenu(message, e);
+        }
     }
 }
 

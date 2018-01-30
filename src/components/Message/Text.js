@@ -17,7 +17,6 @@ class Text extends PureComponent {
         const {side, avatar, nickname, data, resend} = this.props.message;
         return (
             <TextWrapper className={classnames(`message_${side.toLowerCase()}`)}>
-
                 {nickname && <TextNickname className="message__nickname">{nickname}</TextNickname>}
                 {avatar && <TextAvatar className="message__avatar" src={avatar}/>}
                 <TextContent className={classnames('message__text', `message__text_${side.toLowerCase()}`)} dangerouslySetInnerHTML={{__html: data}}/>
