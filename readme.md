@@ -6,7 +6,7 @@
 const text = {
   id      : '[*string]        消息ID',
   data    : '[*string]        消息内容',
-  type    : '[*Constant.type] 消息类型'
+  type    : '[*Constant.type] 消息类型',
   side    : '[*Constant.side] 消息位置',
   avatar  : '[ string]        用户头像',
   nickname: '[ string]        用户昵称',
@@ -75,8 +75,16 @@ const time = {
 ## 1.8 组件消息
 
 ```javascript
-//TODO
+const component = {
+  id       : '[*string]        消息ID',
+  data     : '[*object]        渲染组件的数据',
+  type     : '[*Constant.type] 消息类型',
+  component: '[*ReactComponent] 组件对象',
+  history  : '[ boolean]       是否为历史消息',
+}
 ```
+
+> 注：可以在组件消息的`data`字段中添加`clickCallback`方法，用于组件点击后的回调函数
 
 
 
@@ -85,7 +93,9 @@ const time = {
 消息列表包括一下三个对象或组件
 
 * `ChatScroll` 该对象为消息列表组件
+
 * `api` 该对象为消息列表渲染后向外暴露的方法
+
 * `Constant` 该对象定义了一些枚举值，用于给消息对象赋固定的值，比如消息类型或消息渲染位置
 
 ## 2.1 ChatScroll组件
@@ -94,10 +104,15 @@ const time = {
 
 ### 2.1.1 方法及属性描述
 
-| 属性        | 类型   | 说明                                       |
+| 属性|类型| 说明|
 | --------- | ---- | ---------------------------------------- |
 | onRefresh | 方法   | 当消息列表下拉到最顶端时触发，此时可拉取历史消息                 |
 | onResend  | 方法   | 当消息被标记为发送失败时，消息气泡会出现一个红色的重发按钮，点击重返按钮触发onResend |
+| topWave   | boolean   | 用于是否显示顶部下拉是的波浪效果 |
+| canRefresh  | boolean   | 用于标记是否还可以下拉刷新 |
+| scrollBar   | boolean   | 是否显示滚动条 |
+|style| object| css样式 |
+|onContextMenu|方法|重写鼠标右键事件|
 
 ###2.1.2 使用组件
 
@@ -106,15 +121,15 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import ChatScroll from 'chat-scroll';
 
-// 刷新页面
+// 刷新页面，当页面在顶部继续往下拉时会触发此方法
 const refresh = () => {
   // TODO refresh
-}
+};
 
-// 消息重发
-const resend = () => {
+// 消息重发，当点击重新发送图标时，会触发此方法
+const resend = (message) => {
   // TODO resend
-}
+};
 
 // 渲染组件
 ReactDOM.render(
@@ -137,8 +152,9 @@ const {api} from 'chat-scroll';
 ###2.2.2 方法描述
 
 **api**
-| 属性               | 类型   | 说明              |
-| ---------------- | ---- | --------------- |
+
+|属性|类型|说明|
+| ----| ---- | ----|
 | scrollToBottom() | 方法   | 将消息列表滚动至最底部     |
 | scrollToTop()    | 方法   | 将消息列表滚动至最顶部     |
 | isBottom()       | 方法   | 消息列表是否已经滚动到了最底部 |
@@ -153,6 +169,7 @@ const {api} from 'chat-scroll';
 | 属性   | 类型   | 说明           |
 | ---- | ---- | ------------ |
 | add  | 方法   | 往消息列表中添加一条消息 |
+| del  | 方法   | 删除消息列表中的某条记录，传入消息的ID |
 
 > 注：消息列表中所有的消息ID不能重复，若消息ID重复，则覆盖并渲染存在的消息（不会改变消息的位置）
 
@@ -233,16 +250,4 @@ const {Constant} from 'chat-scroll';
 * `Constant.side.RIGHT`
 
 `LEFT`表示消息渲染在左边，`RIGHT`表示消息被渲染在右边
-
-## 2.4 自定义皮肤
-
-
-
-# 3. 自定义消息组件
-
-## 3.1 什么是自定义消息组件
-
-## 3.2 渲染自定义组件
-
-##3.3可传入的属性或方法
 
