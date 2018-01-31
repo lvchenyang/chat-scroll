@@ -80,7 +80,8 @@ var ChatList = function (_PureComponent) {
         var _props = this.props,
             oldMessages = _props.oldMessages,
             newMessages = _props.newMessages,
-            onRefresh = _props.onRefresh;
+            onRefresh = _props.onRefresh,
+            onImageClick = _props.onImageClick;
 
         var list = oldMessages.reverse().concat(newMessages).toList();
         var images = list.filter(function (item) {
@@ -94,7 +95,7 @@ var ChatList = function (_PureComponent) {
                 _Scroll2.default,
                 _extends({}, this.props, { onRefresh: onRefresh || function () {} }),
                 list.map(function (item) {
-                    return _react2.default.createElement(_Message2.default, { key: item.id, message: item, showAlbum: _this2.showAlbum, resend: _this2.resend, onContextMenu: _this2.contextMenu });
+                    return _react2.default.createElement(_Message2.default, { key: item.id, message: item, showAlbum: onImageClick || _this2.showAlbum, resend: _this2.resend, onContextMenu: _this2.contextMenu });
                 })
             )
         );

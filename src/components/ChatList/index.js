@@ -37,14 +37,14 @@ class ChatList extends PureComponent {
         this.contextMenu = this.contextMenu.bind(this);
     }
     render() {
-        const {oldMessages, newMessages, onRefresh} = this.props;
+        const {oldMessages, newMessages, onRefresh, onImageClick} = this.props;
         const list = oldMessages.reverse().concat(newMessages).toList();
         const images = list.filter(item => item.type === Constant.type.IMAGE);
         return (
             <ChatListWrapper style={this.props.style}>
                 <Album visible={this.state.albumVisible} close={this.hideAlbum} url={this.state.albumUrl}/>
                 <Scroll {...this.props} onRefresh={onRefresh || (() => {})}>
-                    {list.map(item =><Message key={item.id} message={item} showAlbum={this.showAlbum} resend={this.resend} onContextMenu={this.contextMenu}/>)}
+                    {list.map(item =><Message key={item.id} message={item} showAlbum={onImageClick || this.showAlbum} resend={this.resend} onContextMenu={this.contextMenu}/>)}
                 </Scroll>
             </ChatListWrapper>
         );

@@ -113,6 +113,7 @@ const component = {
 | scrollBar   | boolean   | 是否显示滚动条 |
 |style| object| css样式 |
 |onContextMenu|方法|重写鼠标右键事件|
+|onImageClick|方法|点击消息列表中的图片，如果不传入此方法，则使用默认相册|
 
 ###2.1.2 使用组件
 
