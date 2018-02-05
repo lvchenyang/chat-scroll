@@ -141,7 +141,7 @@ var Scroll = function (_Component) {
 
         _this.scrollOffsetY = 0;
         _this.scrollToTopTimer = null;
-
+        _this.scrollToBottomTimer = null;
         _this.prevItemCount = 0;
         _this.nextItemCount = 0;
         _this.prevScrollHeight = 0;
@@ -253,11 +253,21 @@ var Scroll = function (_Component) {
         if (offset < 0 - this.totalScrollHeight) {
             offset = 0 - this.totalScrollHeight;
         }
+        // 滚动到了最顶部
         if (offset === 0) {
             clearTimeout(this.scrollToTopTimer);
             this.scrollToTopTimer = setTimeout(function () {
                 if (_this2.props.onScrollTop) {
                     _this2.props.onScrollTop();
+                }
+            }, 100);
+        }
+        // 滚动到了最底部
+        if (offset + this.totalScrollHeight === 0 && offset < 0) {
+            clearTimeout(this.scrollToBottomTimer);
+            this.scrollToBottomTimer = setTimeout(function () {
+                if (_this2.props.onScrollBottom) {
+                    _this2.props.onScrollBottom();
                 }
             }, 100);
         }
@@ -374,7 +384,7 @@ var Scroll = function (_Component) {
         return 0 - this.state.translateY / this.totalScrollHeight;
     };
 
-    Scroll.prototype.scrollToBottom = function scrollToBottom() {
+    Scroll.prototype.scrollToBottom = function scrollToBottom(duration) {
         if (this.moving) {
             return;
         }
@@ -384,7 +394,8 @@ var Scroll = function (_Component) {
             return;
         }
         this.setState({
-            translateY: this.wrapperHeight - this.contentHeight
+            translateY: this.wrapperHeight - this.contentHeight,
+            animationDuration: duration || 0
         });
     };
 
@@ -481,11 +492,21 @@ var Scroll = function (_Component) {
         if (offset < 0 - this.totalScrollHeight) {
             offset = 0 - this.totalScrollHeight;
         }
+        // 滚动到了最顶部
         if (offset === 0) {
             clearTimeout(this.scrollToTopTimer);
             this.scrollToTopTimer = setTimeout(function () {
                 if (_this7.props.onScrollTop) {
                     _this7.props.onScrollTop();
+                }
+            }, 100);
+        }
+        // 滚动到了最底部
+        if (offset === this.totalScrollHeight && offset > 0) {
+            clearTimeout(this.scrollToBottomTimer);
+            this.scrollToBottomTimer = setTimeout(function () {
+                if (_this7.props.onScrollBottom) {
+                    _this7.props.onScrollBottom();
                 }
             }, 100);
         }

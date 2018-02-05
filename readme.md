@@ -114,6 +114,8 @@ const component = {
 |style| object| css样式 |
 |onContextMenu|方法|重写鼠标右键事件|
 |onImageClick|方法|点击消息列表中的图片，如果不传入此方法，则使用默认相册|
+|onScrollTop|方法|滚动到最顶部时触发|
+|onScrollBottom|方法|滚动到最底部时触发|
 
 ###2.1.2 使用组件
 
