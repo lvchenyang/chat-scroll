@@ -31,6 +31,9 @@ var Image = function (_PureComponent) {
 
         var _this = _possibleConstructorReturn(this, _PureComponent.call(this));
 
+        _this.state = {
+            loadingHeight: 0
+        };
         _this.resendMessage = _this.resendMessage.bind(_this);
         return _this;
     }
@@ -47,11 +50,13 @@ var Image = function (_PureComponent) {
         var _this2 = this;
 
         var _props$message = this.props.message,
+            id = _props$message.id,
             side = _props$message.side,
             avatar = _props$message.avatar,
             nickname = _props$message.nickname,
             data = _props$message.data,
             resend = _props$message.resend;
+        var loadingHeight = this.state.loadingHeight;
 
         var src = data.url || data.blob;
         if (src === '') {
@@ -69,7 +74,8 @@ var Image = function (_PureComponent) {
             _react2.default.createElement(
                 _ImageStyled.ImageSection,
                 { onClick: this.imageClick.bind(this), className: (0, _classnames2.default)('message__image', 'message__image_' + side.toLowerCase()) },
-                _react2.default.createElement(_ImageStyled.ImageContent, { ref: function ref(_ref) {
+                _react2.default.createElement(_ImageStyled.ImageUploadLoading, { visible: data.process < 100, className: 'message__loading', loadingHeight: loadingHeight }),
+                _react2.default.createElement(_ImageStyled.ImageContent, { className: 'image_' + id, ref: function ref(_ref) {
                         return _this2.img = _ref;
                     }, src: src })
             ),
@@ -80,8 +86,11 @@ var Image = function (_PureComponent) {
     Image.prototype.componentDidMount = function componentDidMount() {
         var _this3 = this;
 
-        var imgElem = document.getElementsByClassName(this.img.state.generatedClassName)[0];
+        var imgElem = document.getElementsByClassName('image_' + this.props.message.id)[0];
         imgElem.addEventListener('load', function () {
+            _this3.setState({
+                loadingHeight: imgElem.parentElement.offsetHeight
+            });
             _this3.props.message.resolve();
         }, false);
     };

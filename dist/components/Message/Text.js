@@ -56,8 +56,12 @@ var Text = function (_PureComponent) {
                 nickname
             ),
             avatar && _react2.default.createElement(_TextStyled.TextAvatar, { className: 'message__avatar', src: avatar }),
-            _react2.default.createElement(_TextStyled.TextContent, { className: (0, _classnames2.default)('message__text', 'message__text_' + side.toLowerCase()), dangerouslySetInnerHTML: { __html: data } }),
-            resend === true && _react2.default.createElement(_TextStyled.TextResend, { onClick: this.resendMessage, className: 'message__resend' })
+            _react2.default.createElement(
+                _TextStyled.TextMessageContentWrapper,
+                null,
+                resend === true && _react2.default.createElement(_TextStyled.TextResend, { onClick: this.resendMessage, className: 'message__resend' }),
+                _react2.default.createElement(_TextStyled.TextContent, { className: (0, _classnames2.default)('message__text', 'message__text_' + side.toLowerCase()), dangerouslySetInnerHTML: { __html: data } })
+            )
         );
     };
 

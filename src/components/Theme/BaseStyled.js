@@ -14,6 +14,10 @@ export const Avatar   = styled.img`
     height: 36px;
     width: 36px;
 `;
+export const MessageContentWrapper = styled.div`
+    display: flex;
+    flex-direction: row;
+`;
 export const Resend   = styled.div`
     width: 20px;
     height: 20px;
